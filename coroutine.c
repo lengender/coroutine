@@ -12,11 +12,15 @@
 	#include <ucontext.h>
 #endif 
 
+//定义栈大小
 #define STACK_SIZE (1024*1024)
+
+//默认协程数量
 #define DEFAULT_COROUTINE 16
 
 struct coroutine;
 
+//定义调度器
 struct schedule {
 	char stack[STACK_SIZE];
 	ucontext_t main;
@@ -26,6 +30,7 @@ struct schedule {
 	struct coroutine **co;
 };
 
+//定义协程结构
 struct coroutine {
 	coroutine_func func;
 	void *ud;
@@ -153,6 +158,7 @@ coroutine_resume(struct schedule * S, int id) {
 
 static void
 _save_stack(struct coroutine *C, char *top) {
+    //局部变量dummy存在栈里面，而栈又是从上往下增长的原理
 	char dummy = 0;
 	assert(top - &dummy <= STACK_SIZE);
 	if (C->cap < top - &dummy) {
@@ -160,6 +166,9 @@ _save_stack(struct coroutine *C, char *top) {
 		C->cap = top-&dummy;
 		C->stack = malloc(C->cap);
 	}
+    //所以用S的栈的最高地址，减去这个局部变量的地址，就是协程当前栈空间的内容
+    //然后再下一次调度的时候，将这个内容恢复回去就ok了。
+    //这都能想到，绝了。
 	C->size = top - &dummy;
 	memcpy(C->stack, &dummy, C->size);
 }

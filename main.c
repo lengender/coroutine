@@ -25,6 +25,7 @@ test(struct schedule *S) {
 	int co2 = coroutine_new(S, foo, &arg2);
 	printf("main start\n");
 	while (coroutine_status(S,co1) && coroutine_status(S,co2)) {
+        printf("%d %d\n", coroutine_status(S, co1), coroutine_status(S, co2));
 		coroutine_resume(S,co1);
 		coroutine_resume(S,co2);
 	} 
